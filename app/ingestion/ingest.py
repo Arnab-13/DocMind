@@ -1,12 +1,36 @@
 from pathlib import Path
 from uuid import uuid4
+import hashlib
 
 from qdrant_client.models import PointStruct
 
 from app.ingestion.loader import load_document
 from app.ingestion.chunker import chunk_text
 from app.ingestion.embedder import embed_texts
-from app.database.qdrant_db import upsert_points
+
+from app.database.qdrant_db import (
+    upsert_points,
+    delete_document,
+)
+
+
+def calculate_document_id(
+    path: Path,
+) -> str:
+    """
+    Create a stable ID for the document.
+
+    We use SHA-256 of the file contents.
+
+    Same file  -> same document_id
+    Changed file -> different document_id
+    """
+
+    file_bytes = path.read_bytes()
+
+    return hashlib.sha256(
+        file_bytes
+    ).hexdigest()
 
 
 async def ingest_file(
@@ -15,6 +39,23 @@ async def ingest_file(
 
     # -----------------------------------------
     # STEP 1
+    # Create a unique ID based on file contents.
+    # -----------------------------------------
+
+    document_id = calculate_document_id(
+        path
+    )
+
+    # -----------------------------------------
+    # Remove an older copy of this document.
+    # -----------------------------------------
+
+    delete_document(
+        document_id
+    )
+
+    # -----------------------------------------
+    # STEP 2
     # Extract text from the document.
     # -----------------------------------------
 
@@ -26,8 +67,8 @@ async def ingest_file(
         )
 
     # -----------------------------------------
-    # STEP 2
-    # Split the document into chunks.
+    # STEP 3
+    # Split document into chunks.
     # -----------------------------------------
 
     chunks = chunk_text(text)
@@ -38,16 +79,8 @@ async def ingest_file(
         )
 
     # -----------------------------------------
-    # STEP 3
-    # Extract just the text from each chunk.
-    #
-    # Example:
-    #
-    # [
-    #   "RAG is...",
-    #   "Embeddings are...",
-    #   "Qdrant stores..."
-    # ]
+    # STEP 4
+    # Extract text from each chunk.
     # -----------------------------------------
 
     texts = [
@@ -56,25 +89,17 @@ async def ingest_file(
     ]
 
     # -----------------------------------------
-    # STEP 4
-    # Send all chunks to the FREE
-    # OpenRouter embedding model.
-    #
-    # Each chunk becomes a 1024-dimensional
-    # vector.
-    # -----------------------------------------
-
-    vectors = await embed_texts(texts)
-
-    # -----------------------------------------
     # STEP 5
+    # Generate embeddings using OpenRouter.
+    # -----------------------------------------
+
+    vectors = await embed_texts(
+        texts
+    )
+
+    # -----------------------------------------
+    # STEP 6
     # Create Qdrant points.
-    #
-    # A point contains:
-    #
-    # ID
-    # Vector
-    # Metadata/payload
     # -----------------------------------------
 
     points = []
@@ -91,22 +116,31 @@ async def ingest_file(
             vector=vector,
 
             payload={
-                "text": chunk.text,
+                # Stable document identity
+                "document_id": document_id,
+
+                # Original filename
                 "source": path.name,
+
+                # Which chunk this is
                 "chunk_index": chunk.chunk_index,
+
+                # Actual text
+                "text": chunk.text,
             },
         )
 
         points.append(point)
 
     # -----------------------------------------
-    # STEP 6
-    # Send the vectors to Qdrant Cloud.
+    # STEP 7
+    # Store vectors in Qdrant.
     # -----------------------------------------
 
     upsert_points(points)
 
     return {
+        "document_id": document_id,
         "source": path.name,
         "characters": len(text),
         "chunks": len(chunks),

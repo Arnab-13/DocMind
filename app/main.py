@@ -7,6 +7,7 @@ from app.schemas import AskRequest, AskResponse
 from app.database.qdrant_db import (
     client,
     create_collection_if_needed,
+    create_document_index,
 )
 from app.ingestion.loader import load_document
 from app.ingestion.embedder import embed_one
@@ -27,6 +28,7 @@ app = FastAPI(
 def startup():
 
     create_collection_if_needed()
+    create_document_index()
 
 
 @app.get("/health")

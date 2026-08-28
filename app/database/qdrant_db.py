@@ -48,3 +48,16 @@ def upsert_chunks(
         collection_name=QDRANT_COLLECTION,
         points=points,
     )
+
+def upsert_points(
+    points: list[PointStruct],
+):
+    """
+    Store document vectors and their metadata
+    inside Qdrant Cloud.
+    """
+
+    client.upsert(
+        collection_name=QDRANT_COLLECTION,
+        points=points,
+    )

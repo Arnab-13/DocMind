@@ -1,0 +1,43 @@
+Retrieval-Augmented Generation (RAG)
+
+Retrieval-Augmented Generation is a technique that combines information retrieval with generative language models. Instead of relying only on information stored inside the model's parameters, a RAG system retrieves relevant information from an external knowledge base.
+
+Document ingestion
+
+The first stage of a RAG system is document ingestion. Documents can come from many sources including text files, PDFs, Word documents, websites, and databases. The system extracts readable text from these documents before processing them.
+
+Chunking
+
+Large documents are divided into smaller pieces called chunks. Chunking is important because language models have context limits and because smaller pieces can be retrieved more accurately. A good chunk should contain enough information to represent a meaningful idea.
+
+Chunk overlap
+
+Many RAG systems use overlapping chunks. For example, if one chunk ends in the middle of an important explanation, part of that information can be repeated in the next chunk. This reduces the chance of losing context at chunk boundaries.
+
+Embeddings
+
+After chunking, each chunk is converted into a numerical vector called an embedding. Embeddings represent the semantic meaning of text. Similar pieces of text tend to have vectors that are close to each other in vector space.
+
+Vector databases
+
+The embeddings are stored in a vector database. Qdrant is an example of a vector database that can store vectors together with metadata such as the original document name, chunk number, and text.
+
+Retrieval
+
+When a user asks a question, the question is converted into an embedding using the same embedding model. The vector database compares the question vector with stored document vectors and returns the most relevant chunks.
+
+Augmentation
+
+The retrieved chunks are placed into a prompt together with the user's question. This process is called augmentation. The language model can then use the retrieved information as context when generating its answer.
+
+Generation
+
+The final stage is generation. A language model receives the user's question and the retrieved context and generates an answer. A well-designed RAG system should instruct the model not to invent information that is not supported by the retrieved documents.
+
+RAG versus fine-tuning
+
+RAG and fine-tuning solve different problems. RAG provides a model with external information at query time, while fine-tuning changes the model's behavior by training it on additional examples. RAG is often useful when information changes frequently because the knowledge base can be updated without retraining the language model.
+
+RAG evaluation
+
+A RAG system should be evaluated at both the retrieval and generation levels. Retrieval evaluation measures whether the correct documents or chunks are returned. Generation evaluation measures whether the final answer is correct, relevant, grounded in the retrieved context, and properly supported by sources.

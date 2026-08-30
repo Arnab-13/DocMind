@@ -3,16 +3,28 @@ from app.ingestion.chunker import chunk_text
 
 text = """
 Retrieval-Augmented Generation (RAG) combines
-information retrieval with text generation.
+information retrieval with generative language models.
 
-A RAG system first searches a knowledge base
-for relevant information.
+The system first loads documents and extracts
+their text.
 
-The retrieved information is then provided
-to a language model as context.
+Large documents are then divided into smaller
+chunks.
 
-The language model uses this context to
-generate a grounded answer.
+Each chunk is converted into an embedding.
+
+The embeddings are stored in a vector database.
+
+When the user asks a question, the question is
+also converted into an embedding.
+
+The vector database searches for similar chunks.
+
+The retrieved chunks are then added to the
+prompt sent to the language model.
+
+The language model generates the final answer
+using the retrieved context.
 """
 
 
@@ -24,7 +36,7 @@ chunks = chunk_text(
 
 
 print(
-    f"Created {len(chunks)} chunks\n"
+    f"Created {len(chunks)} chunks"
 )
 
 

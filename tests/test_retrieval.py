@@ -9,7 +9,7 @@ async def main():
     # This is the same type of question
     # a real user will eventually ask.
     question = (
-        "What is the default maximum chunk size?"
+        "How are embeddings used in RAG?"
     )
 
     # Convert question into a vector.

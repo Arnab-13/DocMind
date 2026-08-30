@@ -1,16 +1,11 @@
 from dataclasses import dataclass
+import re
 
 
 @dataclass
 class TextChunk:
     """
-    Represents one piece of a document.
-
-    text:
-        The actual text that will be embedded.
-
-    chunk_index:
-        Position of this chunk inside the document.
+    Represents one chunk of a document.
     """
 
     text: str
@@ -19,9 +14,22 @@ class TextChunk:
 
 def chunk_text(
     text: str,
-    chunk_size: int = 1200,
-    overlap: int = 200,
+    chunk_size: int = 1000,
+    overlap: int = 150,
 ) -> list[TextChunk]:
+    """
+    Split a document into sentence-aware chunks.
+
+    The chunker tries to keep sentences together instead
+    of cutting through words randomly.
+
+    chunk_size:
+        Approximate maximum number of characters per chunk.
+
+    overlap:
+        Number of characters from the previous chunk
+        that should be reused for context.
+    """
 
     # -----------------------------------------
     # Validate settings
@@ -43,98 +51,131 @@ def chunk_text(
         )
 
     # -----------------------------------------
-    # Clean the text WITHOUT destroying
-    # paragraph boundaries.
+    # Clean the document
     # -----------------------------------------
 
-    paragraphs = [
-        paragraph.strip()
-        for paragraph in text.split("\n")
-        if paragraph.strip()
-    ]
+    text = text.strip()
 
-    if not paragraphs:
+    if not text:
         return []
 
+    # Replace multiple spaces/newlines with one space.
+    text = re.sub(r"\s+", " ", text)
+
     # -----------------------------------------
-    # Combine paragraphs until the chunk
-    # reaches approximately chunk_size.
+    # Split into sentences
+    # -----------------------------------------
+
+    sentences = re.split(
+        r"(?<=[.!?])\s+",
+        text,
+    )
+
+    sentences = [
+        sentence.strip()
+        for sentence in sentences
+        if sentence.strip()
+    ]
+
+    # -----------------------------------------
+    # Build chunks
     # -----------------------------------------
 
     chunks = []
 
-    current_text = ""
+    current_sentences = []
+    current_length = 0
+    chunk_index = 0
 
-    for paragraph in paragraphs:
+    for sentence in sentences:
 
-        # If adding this paragraph keeps us
-        # within our target size, add it.
+        sentence_length = len(sentence)
+
+        # -------------------------------------
+        # If adding this sentence would make
+        # the chunk too large, save the current
+        # chunk first.
+        # -------------------------------------
+
         if (
-            len(current_text)
-            + len(paragraph)
-            + 1
-            <= chunk_size
+            current_sentences
+            and current_length + 1 + sentence_length
+            > chunk_size
         ):
 
-            if current_text:
-                current_text += "\n\n"
+            chunk_text_value = " ".join(
+                current_sentences
+            ).strip()
 
-            current_text += paragraph
-
-        else:
-
-            # Store the current chunk.
-            if current_text:
-                chunks.append(current_text)
-
-            # Start a new chunk.
-            current_text = paragraph
-
-    # Don't forget the final chunk.
-    if current_text:
-        chunks.append(current_text)
-
-    # -----------------------------------------
-    # Add overlap between neighboring chunks.
-    #
-    # This helps prevent important information
-    # from being lost at chunk boundaries.
-    # -----------------------------------------
-
-    final_chunks = []
-
-    for index, chunk in enumerate(chunks):
-
-        if index == 0:
-
-            final_chunks.append(
+            chunks.append(
                 TextChunk(
-                    text=chunk,
-                    chunk_index=index,
+                    text=chunk_text_value,
+                    chunk_index=chunk_index,
                 )
             )
 
-            continue
+            chunk_index += 1
 
-        previous_chunk = chunks[index - 1]
+            # ---------------------------------
+            # Create overlap.
+            #
+            # We keep the last sentence(s)
+            # from the previous chunk until
+            # we approach the overlap size.
+            # ---------------------------------
 
-        # Take the last `overlap` characters
-        # from the previous chunk.
-        overlap_text = previous_chunk[
-            -overlap:
-        ]
+            overlap_sentences = []
+            overlap_length = 0
 
-        combined = (
-            overlap_text
-            + "\n\n"
-            + chunk
+            for previous_sentence in reversed(
+                current_sentences
+            ):
+
+                if (
+                    overlap_length
+                    + len(previous_sentence)
+                    > overlap
+                ):
+                    break
+
+                overlap_sentences.insert(
+                    0,
+                    previous_sentence,
+                )
+
+                overlap_length += (
+                    len(previous_sentence)
+                )
+
+            current_sentences = overlap_sentences
+
+            current_length = sum(
+                len(sentence)
+                for sentence in current_sentences
+            )
+
+        current_sentences.append(sentence)
+
+        current_length = sum(
+            len(sentence)
+            for sentence in current_sentences
         )
 
-        final_chunks.append(
+    # -----------------------------------------
+    # Save final chunk
+    # -----------------------------------------
+
+    if current_sentences:
+
+        chunk_text_value = " ".join(
+            current_sentences
+        ).strip()
+
+        chunks.append(
             TextChunk(
-                text=combined,
-                chunk_index=index,
+                text=chunk_text_value,
+                chunk_index=chunk_index,
             )
         )
 
-    return final_chunks
+    return chunks

@@ -1,5 +1,3 @@
-Retrieval-Augmented Generation (RAG) combines document retrieval with a language model to answer questions using relevant information from a knowledge base.
-
 This is a simple test document for a RAG loader. The loader should read this text, split it into chunks, generate embeddings, and store the resulting vectors for retrieval.
 
 Test facts:

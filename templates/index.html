@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>DocMind</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+</head>
+
+<body>
+
+    <main class="container">
+
+        <!-- ==============================
+             HEADER
+        =============================== -->
+
+        <header class="header">
+
+            <div>
+                <h1>🧠 DocMind</h1>
+
+                <p>
+                    Your AI-powered document assistant
+                </p>
+            </div>
+
+        </header>
+
+
+        <!-- ==============================
+             DOCUMENT UPLOAD
+        =============================== -->
+
+        <section class="card">
+
+            <h2>Upload Document</h2>
+
+            <p class="description">
+                Upload a TXT, PDF, or DOCX file
+                to add it to your knowledge base.
+            </p>
+
+            <div class="upload-area">
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".txt,.pdf,.docx"
+                >
+
+                <button
+                    id="uploadButton"
+                >
+                    Upload
+                </button>
+
+            </div>
+
+            <div
+                id="uploadStatus"
+                class="status"
+            ></div>
+
+        </section>
+
+
+        <!-- ==============================
+             ASK QUESTION
+        =============================== -->
+
+        <section class="card">
+
+            <h2>Ask Your Documents</h2>
+
+            <p class="description">
+                Ask a question based on the documents
+                you have uploaded.
+            </p>
+
+            <textarea
+                id="questionInput"
+                placeholder="Example: What is the name of the product?"
+                rows="4"
+            ></textarea>
+
+            <button
+                id="askButton"
+                class="ask-button"
+            >
+                Ask DocMind
+            </button>
+
+        </section>
+
+
+        <!-- ==============================
+             ANSWER
+        =============================== -->
+
+        <section
+            class="card"
+            id="answerSection"
+        >
+
+            <h2>Answer</h2>
+
+            <div
+                id="answer"
+                class="answer"
+            >
+                Ask a question to see the answer.
+            </div>
+
+        </section>
+
+
+        <!-- ==============================
+             SOURCES
+        =============================== -->
+
+        <section
+            class="card"
+            id="sourcesSection"
+        >
+
+            <h2>Sources</h2>
+
+            <div id="sources">
+
+                <p class="muted">
+                    Sources will appear here.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="/static/app.js"></script>
+
+</body>
+
+</html>

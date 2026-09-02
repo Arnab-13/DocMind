@@ -1,7 +1,16 @@
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import (
+    FastAPI,
+    Request,
+    UploadFile,
+    File,
+    HTTPException,
+)
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from app.schemas import AskRequest, AskResponse
 from app.database.qdrant_db import (
@@ -23,6 +32,15 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.mount(
+    "/static",
+    StaticFiles(directory="static"),
+    name="static",
+)
+
+templates = Jinja2Templates(
+    directory="templates"
+)
 
 @app.on_event("startup")
 def startup():
@@ -30,6 +48,16 @@ def startup():
     create_collection_if_needed()
     create_document_index()
 
+@app.get("/")
+async def home(request: Request):
+
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "request": request
+        },
+    )
 
 @app.get("/health")
 def health():

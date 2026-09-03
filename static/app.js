@@ -1,281 +1,424 @@
-// ========================================
-// FILE UPLOAD
-// ========================================
+const fileInput = document.getElementById("fileInput");
+const uploadButton = document.getElementById("uploadButton");
+const uploadStatus = document.getElementById("uploadStatus");
 
-const fileInput =
-    document.getElementById("fileInput");
+const questionInput = document.getElementById("questionInput");
+const askButton = document.getElementById("askButton");
 
-const uploadButton =
-    document.getElementById("uploadButton");
-
-const uploadStatus =
-    document.getElementById("uploadStatus");
+const answer = document.getElementById("answer");
+const sources = document.getElementById("sources");
 
 
-uploadButton.addEventListener(
-    "click",
-    async () => {
+/*
+--------------------------------------------------
+UPLOAD DOCUMENT
+--------------------------------------------------
+Sends the selected document to FastAPI.
 
-        const file =
-            fileInput.files[0];
+Flow:
 
+Browser
+   ↓
+POST /ingest
+   ↓
+FastAPI
+   ↓
+load → chunk → embed → Qdrant
+--------------------------------------------------
+*/
 
-        // ------------------------------
-        // Make sure a file was selected
-        // ------------------------------
+uploadButton.addEventListener("click", async () => {
 
-        if (!file) {
+    const file = fileInput.files[0];
 
-            uploadStatus.textContent =
-                "Please select a file first.";
+    if (!file) {
+        uploadStatus.textContent = "Please select a document first.";
+        return;
+    }
 
-            return;
+    const formData = new FormData();
+    formData.append("file", file);
+
+    uploadButton.disabled = true;
+    uploadButton.textContent = "Uploading...";
+    uploadStatus.textContent = "Processing document...";
+
+    try {
+
+        const response = await fetch("/ingest", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Upload failed.");
         }
-
-
-        // ------------------------------
-        // Prepare multipart form data
-        // ------------------------------
-
-        const formData =
-            new FormData();
-
-        formData.append(
-            "file",
-            file
-        );
-
-
-        uploadButton.disabled = true;
 
         uploadStatus.textContent =
-            "Uploading and processing...";
+            `✓ ${data.filename} uploaded successfully — ${data.chunks} chunk(s) stored.`;
 
+    } catch (error) {
 
-        try {
+        uploadStatus.textContent =
+            `✕ ${error.message}`;
 
-            // --------------------------
-            // Send file to FastAPI
-            // --------------------------
+    } finally {
 
-            const response =
-                await fetch(
-                    "/ingest",
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.detail ||
-                    "Upload failed."
-                );
-            }
-
-
-            // --------------------------
-            // Successful upload
-            // --------------------------
-
-            uploadStatus.textContent =
-                `✓ ${data.message} ` +
-                `(${data.chunks} chunks created)`;
-
-
-        } catch (error) {
-
-            uploadStatus.textContent =
-                `❌ ${error.message}`;
-
-        } finally {
-
-            uploadButton.disabled = false;
-
-        }
-
+        uploadButton.disabled = false;
+        uploadButton.textContent = "Upload Document";
     }
-);
+});
 
 
+/*
+--------------------------------------------------
+ASK DOCMIND
+--------------------------------------------------
+Sends the user's question to FastAPI.
 
-// ========================================
-// ASK QUESTION
-// ========================================
+Flow:
 
-const questionInput =
-    document.getElementById(
-        "questionInput"
-    );
+Question
+   ↓
+POST /ask
+   ↓
+Embedding
+   ↓
+Qdrant retrieval
+   ↓
+Relevant context
+   ↓
+LLM
+   ↓
+Answer + sources
+--------------------------------------------------
+*/
 
-const askButton =
-    document.getElementById(
-        "askButton"
-    );
-
-const answer =
-    document.getElementById(
-        "answer"
-    );
-
-const sources =
-    document.getElementById(
-        "sources"
-    );
-
-
-askButton.addEventListener(
-    "click",
-    async () => {
-
-        const question =
-            questionInput.value.trim();
+askButton.addEventListener("click", askQuestion);
 
 
-        // ------------------------------
-        // Validate question
-        // ------------------------------
+async function askQuestion() {
 
-        if (!question) {
+    const question = questionInput.value.trim();
 
-            answer.textContent =
-                "Please enter a question.";
+    if (!question) {
+        return;
+    }
 
-            return;
-        }
-
-
-        askButton.disabled = true;
-
-        answer.textContent =
-            "DocMind is thinking...";
+    const conversation =
+        document.getElementById("conversation");
 
 
-        sources.innerHTML =
-            "<p class='muted'>Loading sources...</p>";
+    /*
+    ------------------------------------------
+    ADD USER MESSAGE
+    ------------------------------------------
+    */
+
+    const userMessage = document.createElement("div");
+
+    userMessage.className = "chat-message user-message";
+
+    userMessage.innerHTML = `
+        <div class="chat-label">
+            You
+        </div>
+
+        <div class="user-bubble">
+            ${escapeHtml(question)}
+        </div>
+    `;
+
+    conversation.appendChild(userMessage);
 
 
-        try {
+    /*
+    ------------------------------------------
+    ADD LOADING MESSAGE
+    ------------------------------------------
+    */
 
-            // --------------------------
-            // Send question to FastAPI
-            // --------------------------
+    const aiMessage = document.createElement("div");
 
-            const response =
-                await fetch(
-                    "/ask",
-                    {
-                        method: "POST",
+    aiMessage.className = "chat-message ai-message";
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
+    aiMessage.innerHTML = `
+        <div class="chat-label">
+            🧠 DocMind
+        </div>
 
-                        body: JSON.stringify({
-                            question: question
-                        })
-                    }
-                );
+        <div class="ai-bubble">
+            <div class="chat-loading">
+                Searching your documents...
+            </div>
+        </div>
+    `;
 
-
-            const data =
-                await response.json();
+    conversation.appendChild(aiMessage);
 
 
-            if (!response.ok) {
+    /*
+    ------------------------------------------
+    SCROLL TO NEW MESSAGE
+    ------------------------------------------
+    */
 
-                throw new Error(
-                    data.detail ||
-                    "Request failed."
-                );
-            }
-
-
-            // --------------------------
-            // Display answer
-            // --------------------------
-
-            answer.textContent =
-                data.answer;
+    aiMessage.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+    });
 
 
-            // --------------------------
-            // Display sources
-            // --------------------------
+    /*
+    ------------------------------------------
+    DISABLE BUTTON
+    ------------------------------------------
+    */
 
-            sources.innerHTML = "";
-
-
-            if (
-                !data.sources ||
-                data.sources.length === 0
-            ) {
-
-                sources.innerHTML =
-                    "<p class='muted'>" +
-                    "No sources found." +
-                    "</p>";
-
-                return;
-            }
+    askButton.disabled = true;
+    askButton.textContent = "Thinking...";
 
 
-            data.sources.forEach(
-                (source, index) => {
+    try {
 
-                    const sourceElement =
-                        document.createElement(
-                            "div"
-                        );
+        const response = await fetch("/ask", {
 
-                    sourceElement.className =
-                        "source";
+            method: "POST",
 
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-                    sourceElement.innerHTML = `
-                        <strong>
-                            [${index + 1}]
-                            ${source.source}
-                        </strong>
-
-                        <small>
-                            Chunk:
-                            ${source.chunk_index}
-                            &nbsp; | &nbsp;
-                            Score:
-                            ${source.score.toFixed(4)}
-                        </small>
-                    `;
+            body: JSON.stringify({
+                question: question
+            })
+        });
 
 
-                    sources.appendChild(
-                        sourceElement
-                    );
+        const data = await response.json();
 
-                }
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || "Something went wrong."
             );
-
-
-        } catch (error) {
-
-            answer.textContent =
-                `❌ ${error.message}`;
-
-            sources.innerHTML = "";
-
-        } finally {
-
-            askButton.disabled = false;
-
         }
 
+
+        /*
+        ------------------------------------------
+        DISPLAY ANSWER
+        ------------------------------------------
+        */
+
+        const aiBubble =
+            aiMessage.querySelector(".ai-bubble");
+
+        aiBubble.innerHTML =
+            formatAnswer(data.answer);
+
+
+        /*
+        ------------------------------------------
+        ADD SOURCES
+        ------------------------------------------
+        */
+
+        if (data.sources && data.sources.length > 0) {
+
+            const sourceBlock =
+                document.createElement("div");
+
+            sourceBlock.className = "message-sources";
+
+            sourceBlock.innerHTML = `
+                <div class="message-sources-title">
+                    📚 Sources
+                </div>
+            `;
+
+
+            data.sources.forEach((source) => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className = "source-card";
+
+                const score =
+                    source.score !== undefined
+                        ? (source.score * 100).toFixed(1)
+                        : "N/A";
+
+
+                card.innerHTML = `
+                    <div class="source-title">
+                        📄 ${escapeHtml(source.source)}
+                    </div>
+
+                    <div class="source-info">
+                        Chunk ${source.chunk_index}
+                        <span>•</span>
+                        Relevance ${score}%
+                    </div>
+                `;
+
+                sourceBlock.appendChild(card);
+            });
+
+
+            aiBubble.appendChild(sourceBlock);
+        }
+
+
+        /*
+        ------------------------------------------
+        CLEAR QUESTION BOX
+        ------------------------------------------
+        */
+
+        questionInput.value = "";
+
+
+        /*
+        ------------------------------------------
+        SCROLL TO ANSWER
+        ------------------------------------------
+        */
+
+        aiMessage.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+
+
+    } catch (error) {
+
+        const aiBubble =
+            aiMessage.querySelector(".ai-bubble");
+
+        aiBubble.innerHTML = `
+            <div class="error">
+                ✕ ${escapeHtml(error.message)}
+            </div>
+        `;
+
+    } finally {
+
+        askButton.disabled = false;
+        askButton.textContent = "Ask DocMind";
     }
-);
+}
+
+
+/*
+--------------------------------------------------
+BASIC MARKDOWN FORMATTER
+--------------------------------------------------
+
+Your backend already returns things like:
+
+## Answers
+
+**Product name:** AcmeAI
+
+We convert the most common Markdown
+elements into HTML.
+
+This is intentionally lightweight.
+We don't need a large frontend framework.
+--------------------------------------------------
+*/
+
+function formatAnswer(text) {
+
+    if (!text) {
+        return "<p>No answer was returned.</p>";
+    }
+
+    let html = escapeHtml(text);
+
+    // Headings
+    html = html.replace(
+        /^### (.*)$/gm,
+        "<h4>$1</h4>"
+    );
+
+    html = html.replace(
+        /^## (.*)$/gm,
+        "<h3>$1</h3>"
+    );
+
+    html = html.replace(
+        /^# (.*)$/gm,
+        "<h2>$1</h2>"
+    );
+
+    // Bold
+    html = html.replace(
+        /\*\*(.*?)\*\*/g,
+        "<strong>$1</strong>"
+    );
+
+    // Bullet points
+    html = html.replace(
+        /^- (.*)$/gm,
+        "<li>$1</li>"
+    );
+
+    html = html.replace(
+        /(<li>.*<\/li>)/gs,
+        "<ul>$1</ul>"
+    );
+
+    // New lines
+    html = html.replace(
+        /\n/g,
+        "<br>"
+    );
+
+    return html;
+}
+
+
+/*
+--------------------------------------------------
+SECURITY HELPER
+
+Never insert raw user/backend text directly
+into innerHTML.
+
+This prevents HTML injection problems.
+--------------------------------------------------
+*/
+
+function escapeHtml(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+
+/*
+--------------------------------------------------
+ENTER KEY SUPPORT
+
+Ctrl + Enter → Ask question
+
+This makes the interface feel more like
+an actual AI assistant.
+--------------------------------------------------
+*/
+
+questionInput.addEventListener("keydown", (event) => {
+
+    if (event.ctrlKey && event.key === "Enter") {
+        askQuestion();
+    }
+
+});

@@ -164,6 +164,8 @@ button:hover {
 button:disabled {
     background: #9ca3af;
 
+    opacity: 0.7;
+
     cursor: not-allowed;
 }
 
@@ -186,24 +188,234 @@ button:disabled {
 
 
 /* ========================================
-   ANSWER
+   ANSWER CONTAINER
 ======================================== */
 
 .answer {
-    line-height: 1.7;
-
-    white-space: pre-wrap;
-
     background: #f9fafb;
 
-    padding: 18px;
+    padding: 12px;
 
     border-radius: 8px;
 }
 
 
 /* ========================================
-   SOURCES
+   CONVERSATION
+======================================== */
+
+#conversation {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+
+/* ========================================
+   CHAT MESSAGE
+======================================== */
+
+.chat-message {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+    width: 100%;
+}
+
+.chat-label {
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #555;
+}
+
+
+/* ========================================
+   USER MESSAGE
+======================================== */
+
+.user-message {
+    align-items: flex-end;
+}
+
+.user-message .chat-label {
+    padding-right: 4px;
+}
+
+.user-bubble {
+    max-width: 70%;
+
+    padding: 10px 14px;
+
+    border-radius:
+        12px 12px 4px 12px;
+
+    background: #4f46e5;
+
+    color: white;
+
+    font-size: 14px;
+
+    line-height: 1.4;
+}
+
+
+/* ========================================
+   DOCMIND MESSAGE
+======================================== */
+
+.ai-message {
+    align-items: flex-start;
+}
+
+.ai-message .chat-label {
+    padding-left: 4px;
+}
+
+.ai-bubble {
+    max-width: 80%;
+
+    padding: 12px 14px;
+
+    border-radius:
+        12px 12px 12px 4px;
+
+    background: white;
+
+    border: 1px solid #e5e7eb;
+
+    color: #111827;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* ========================================
+   ANSWER TYPOGRAPHY
+======================================== */
+
+#answer h2,
+#answer h3,
+#answer h4 {
+    margin-top: 10px;
+
+    margin-bottom: 6px;
+}
+
+#answer ul {
+    padding-left: 20px;
+
+    margin-top: 6px;
+
+    margin-bottom: 6px;
+}
+
+#answer li {
+    margin-bottom: 4px;
+}
+
+#answer strong {
+    font-weight: 700;
+}
+
+
+/* ========================================
+   LOADING
+======================================== */
+
+.chat-loading {
+    padding: 2px 0;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+/* ========================================
+   ERROR
+======================================== */
+
+.error {
+    padding: 10px;
+
+    border-radius: 8px;
+
+    background: #fee2e2;
+
+    color: #991b1b;
+
+    font-size: 14px;
+}
+
+
+/* ========================================
+   SOURCES INSIDE AI MESSAGE
+======================================== */
+
+.message-sources {
+    margin-top: 10px;
+
+    padding-top: 8px;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.message-sources-title {
+    font-size: 12px;
+
+    font-weight: 600;
+
+    margin-bottom: 6px;
+}
+
+
+/* ========================================
+   SOURCE CARD
+======================================== */
+
+.message-sources .source-card {
+    margin-top: 5px;
+
+    padding: 8px 10px;
+
+    background: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 7px;
+}
+
+.source-title {
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+.source-info {
+    margin-top: 3px;
+
+    font-size: 11px;
+
+    color: #6b7280;
+}
+
+.source-info span {
+    margin: 0 4px;
+}
+
+
+/* ========================================
+   OLD SOURCE STYLE
+   Kept in case other HTML uses it
 ======================================== */
 
 .source {
@@ -253,5 +465,14 @@ button:disabled {
 
     .header h1 {
         font-size: 30px;
+    }
+
+    .user-bubble,
+    .ai-bubble {
+        max-width: 90%;
+    }
+
+    .answer {
+        padding: 8px;
     }
 }

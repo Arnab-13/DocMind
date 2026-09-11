@@ -30,7 +30,7 @@ body {
 
     margin: 0 auto;
 
-    padding: 40px 0;
+    padding: 30px 0;
 }
 
 
@@ -41,13 +41,13 @@ body {
 .header {
     text-align: center;
 
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .header h1 {
-    margin-bottom: 8px;
+    margin: 0 0 6px;
 
-    font-size: 38px;
+    font-size: 36px;
 }
 
 .header p {
@@ -55,7 +55,7 @@ body {
 
     color: #6b7280;
 
-    font-size: 16px;
+    font-size: 15px;
 }
 
 
@@ -66,24 +66,28 @@ body {
 .card {
     background: white;
 
-    padding: 25px;
+    padding: 20px;
 
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 
     border-radius: 12px;
 
     box-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.06);
+        0 3px 12px rgba(0, 0, 0, 0.05);
 }
 
 .card h2 {
-    margin-top: 0;
+    margin: 0 0 6px;
+
+    font-size: 20px;
 }
 
 .description {
     color: #6b7280;
 
-    margin-bottom: 20px;
+    margin: 0 0 16px;
+
+    font-size: 14px;
 }
 
 
@@ -94,7 +98,7 @@ body {
 .upload-area {
     display: flex;
 
-    gap: 12px;
+    gap: 10px;
 
     align-items: center;
 }
@@ -102,11 +106,15 @@ body {
 input[type="file"] {
     flex: 1;
 
-    padding: 10px;
+    padding: 9px;
 
     border: 1px solid #d1d5db;
 
     border-radius: 8px;
+
+    background: #fff;
+
+    font-size: 14px;
 }
 
 
@@ -117,17 +125,21 @@ input[type="file"] {
 textarea {
     width: 100%;
 
+    min-height: 90px;
+
     resize: vertical;
 
-    padding: 14px;
+    padding: 12px;
 
     border: 1px solid #d1d5db;
 
     border-radius: 8px;
 
-    font-size: 15px;
+    font-size: 14px;
 
     font-family: inherit;
+
+    line-height: 1.5;
 }
 
 textarea:focus {
@@ -146,19 +158,27 @@ button {
 
     border-radius: 8px;
 
-    padding: 11px 18px;
+    padding: 10px 17px;
 
     background: #4f46e5;
 
     color: white;
 
-    font-size: 15px;
+    font-size: 14px;
 
     cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.1s ease;
 }
 
 button:hover {
     background: #4338ca;
+}
+
+button:active {
+    transform: translateY(1px);
 }
 
 button:disabled {
@@ -167,10 +187,12 @@ button:disabled {
     opacity: 0.7;
 
     cursor: not-allowed;
+
+    transform: none;
 }
 
 .ask-button {
-    margin-top: 15px;
+    margin-top: 10px;
 
     width: 100%;
 }
@@ -181,22 +203,9 @@ button:disabled {
 ======================================== */
 
 .status {
-    margin-top: 15px;
+    margin-top: 10px;
 
-    font-size: 14px;
-}
-
-
-/* ========================================
-   ANSWER CONTAINER
-======================================== */
-
-.answer {
-    background: #f9fafb;
-
-    padding: 12px;
-
-    border-radius: 8px;
+    font-size: 13px;
 }
 
 
@@ -209,7 +218,7 @@ button:disabled {
 
     flex-direction: column;
 
-    gap: 16px;
+    gap: 12px;
 }
 
 
@@ -222,17 +231,17 @@ button:disabled {
 
     flex-direction: column;
 
-    gap: 5px;
+    gap: 4px;
 
     width: 100%;
 }
 
 .chat-label {
-    font-size: 13px;
+    font-size: 12px;
 
     font-weight: 600;
 
-    color: #555;
+    color: #6b7280;
 }
 
 
@@ -251,7 +260,7 @@ button:disabled {
 .user-bubble {
     max-width: 70%;
 
-    padding: 10px 14px;
+    padding: 9px 13px;
 
     border-radius:
         12px 12px 4px 12px;
@@ -263,6 +272,8 @@ button:disabled {
     font-size: 14px;
 
     line-height: 1.4;
+
+    word-wrap: break-word;
 }
 
 
@@ -279,9 +290,9 @@ button:disabled {
 }
 
 .ai-bubble {
-    max-width: 80%;
+    max-width: 82%;
 
-    padding: 12px 14px;
+    padding: 11px 13px;
 
     border-radius:
         12px 12px 12px 4px;
@@ -295,6 +306,8 @@ button:disabled {
     font-size: 14px;
 
     line-height: 1.5;
+
+    word-wrap: break-word;
 }
 
 
@@ -302,27 +315,38 @@ button:disabled {
    ANSWER TYPOGRAPHY
 ======================================== */
 
-#answer h2,
-#answer h3,
-#answer h4 {
-    margin-top: 10px;
-
-    margin-bottom: 6px;
-}
-
-#answer ul {
-    padding-left: 20px;
-
+.ai-bubble h2,
+.ai-bubble h3,
+.ai-bubble h4 {
     margin-top: 6px;
 
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
-#answer li {
-    margin-bottom: 4px;
+.ai-bubble h2:first-child,
+.ai-bubble h3:first-child,
+.ai-bubble h4:first-child {
+    margin-top: 0;
 }
 
-#answer strong {
+.ai-bubble p {
+    margin: 5px 0;
+}
+
+.ai-bubble ul,
+.ai-bubble ol {
+    padding-left: 20px;
+
+    margin-top: 5px;
+
+    margin-bottom: 5px;
+}
+
+.ai-bubble li {
+    margin-bottom: 3px;
+}
+
+.ai-bubble strong {
     font-weight: 700;
 }
 
@@ -345,7 +369,7 @@ button:disabled {
 ======================================== */
 
 .error {
-    padding: 10px;
+    padding: 9px 10px;
 
     border-radius: 8px;
 
@@ -353,28 +377,30 @@ button:disabled {
 
     color: #991b1b;
 
-    font-size: 14px;
+    font-size: 13px;
 }
 
 
 /* ========================================
-   SOURCES INSIDE AI MESSAGE
+   SOURCES
 ======================================== */
 
 .message-sources {
-    margin-top: 10px;
+    margin-top: 8px;
 
-    padding-top: 8px;
+    padding-top: 7px;
 
     border-top: 1px solid #e5e7eb;
 }
 
 .message-sources-title {
-    font-size: 12px;
+    font-size: 11px;
 
     font-weight: 600;
 
-    margin-bottom: 6px;
+    margin-bottom: 5px;
+
+    color: #6b7280;
 }
 
 
@@ -383,9 +409,9 @@ button:disabled {
 ======================================== */
 
 .message-sources .source-card {
-    margin-top: 5px;
+    margin-top: 4px;
 
-    padding: 8px 10px;
+    padding: 7px 9px;
 
     background: #f9fafb;
 
@@ -395,53 +421,32 @@ button:disabled {
 }
 
 .source-title {
-    font-size: 13px;
+    font-size: 12px;
 
     font-weight: 600;
 }
 
 .source-info {
-    margin-top: 3px;
+    margin-top: 2px;
 
-    font-size: 11px;
+    font-size: 10px;
 
     color: #6b7280;
 }
 
 .source-info span {
-    margin: 0 4px;
+    margin: 0 3px;
 }
 
 
 /* ========================================
-   OLD SOURCE STYLE
-   Kept in case other HTML uses it
+   MUTED TEXT
 ======================================== */
-
-.source {
-    padding: 12px;
-
-    margin-bottom: 10px;
-
-    background: #f9fafb;
-
-    border-left: 4px solid #4f46e5;
-
-    border-radius: 5px;
-}
-
-.source strong {
-    display: block;
-
-    margin-bottom: 5px;
-}
-
-.source small {
-    color: #6b7280;
-}
 
 .muted {
     color: #9ca3af;
+
+    font-size: 13px;
 }
 
 
@@ -457,22 +462,34 @@ button:disabled {
         padding: 20px 0;
     }
 
-    .upload-area {
-        flex-direction: column;
+    .card {
+        padding: 16px;
+    }
 
-        align-items: stretch;
+    .header {
+        margin-bottom: 18px;
     }
 
     .header h1 {
         font-size: 30px;
     }
 
-    .user-bubble,
-    .ai-bubble {
-        max-width: 90%;
+    .upload-area {
+        flex-direction: column;
+
+        align-items: stretch;
     }
 
-    .answer {
-        padding: 8px;
+    .upload-area button {
+        width: 100%;
+    }
+
+    .user-bubble,
+    .ai-bubble {
+        max-width: 92%;
+    }
+
+    #conversation {
+        gap: 10px;
     }
 }

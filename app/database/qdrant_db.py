@@ -114,3 +114,40 @@ def upsert_points(
         collection_name=QDRANT_COLLECTION,
         points=points,
     )
+
+
+# -----------------------------------------
+# GET ALL STORED CHUNKS
+# -----------------------------------------
+
+def get_all_chunks():
+    """
+    Retrieve all stored document chunks from Qdrant.
+
+    This is used by the local BM25 keyword
+    search component of hybrid retrieval.
+
+    We only retrieve the payload because BM25
+    does not need the embedding vectors.
+    """
+
+    all_points = []
+
+    offset = None
+
+    while True:
+
+        points, offset = client.scroll(
+            collection_name=QDRANT_COLLECTION,
+            limit=100,
+            offset=offset,
+            with_payload=True,
+            with_vectors=False,
+        )
+
+        all_points.extend(points)
+
+        if offset is None:
+            break
+
+    return all_points

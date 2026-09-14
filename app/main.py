@@ -21,16 +21,21 @@ from app.database.qdrant_db import (
 from app.ingestion.loader import load_document
 from app.ingestion.embedder import embed_one
 from app.ingestion.chunker import chunk_text
-from app.retrieval.retriever import retrieve
 from app.generation.generator import generate_answer
 from app.generation.prompt import build_rag_prompt
 from app.ingestion.ingest import ingest_file
+from app.retrieval.retriever import (
+    hybrid_retrieve,
+    rebuild_bm25_index,
+)
 
 
 app = FastAPI(
     title="DocMind RAG",
     version="1.0.0",
 )
+
+rebuild_bm25_index()
 
 app.mount(
     "/static",
@@ -135,26 +140,6 @@ async def ingest_document(
 }
 
 
-    # text = load_document(path)
-
-    # if not text.strip():
-    #     raise HTTPException(
-    #         status_code=400,
-    #         detail="No readable text was found.",
-    #     )
-
-
-    # chunks = chunk_text(text)
-
-
-    # return {
-    #     "filename": safe_name,
-    #     "characters": len(text),
-    #     "chunks": len(chunks),
-    #     "message": "Document loaded and chunked.",
-    # }
-
-
 
 @app.post(
     "/ask",
@@ -192,7 +177,8 @@ async def ask(
     # against our stored document vectors.
     # -----------------------------------------
 
-    points = retrieve(
+    points = hybrid_retrieve(
+        question=question,
         query_vector=query_vector,
         top_k=5,
     )

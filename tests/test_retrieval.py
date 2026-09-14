@@ -9,7 +9,7 @@ async def main():
     # This is the same type of question
     # a real user will eventually ask.
     question = (
-        "How are embeddings used in RAG?"
+        "What is the name of product?"
     )
 
     # Convert question into a vector.

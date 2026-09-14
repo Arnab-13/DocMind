@@ -247,12 +247,6 @@ async function askQuestion() {
 
                 card.className = "source-card";
 
-                const score =
-                    source.score !== undefined
-                        ? (source.score * 100).toFixed(1)
-                        : "N/A";
-
-
                 card.innerHTML = `
                     <div class="source-title">
                         📄 ${escapeHtml(source.source)}
@@ -261,7 +255,7 @@ async function askQuestion() {
                     <div class="source-info">
                         Chunk ${source.chunk_index}
                         <span>•</span>
-                        Relevance ${score}%
+                        Hybrid retrieval
                     </div>
                 `;
 

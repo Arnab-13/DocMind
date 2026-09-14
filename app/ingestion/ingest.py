@@ -13,6 +13,8 @@ from app.database.qdrant_db import (
     delete_document,
 )
 
+from app.retrieval.retriever import rebuild_bm25_index
+
 
 def calculate_document_id(
     path: Path,
@@ -138,6 +140,10 @@ async def ingest_file(
     # -----------------------------------------
 
     upsert_points(points)
+
+    # Refresh the keyword-search index so the newly
+    # ingested document is immediately searchable.
+    rebuild_bm25_index()
 
     return {
         "document_id": document_id,

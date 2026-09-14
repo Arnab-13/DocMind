@@ -6,6 +6,8 @@ from app.database.qdrant_db import (
     get_all_chunks,
 )
 
+import re
+
 
 # -----------------------------------------
 # SETTINGS
@@ -17,6 +19,70 @@ DENSE_SCORE_THRESHOLD = 0.05
 
 RRF_K = 60
 
+# -----------------------------------------
+# BM25 CACHE
+# -----------------------------------------
+
+_bm25 = None
+_bm25_points = []
+
+def tokenize(text: str) -> list[str]:
+    """
+    Normalize text into simple keyword tokens
+    for BM25 retrieval.
+    """
+    return re.findall(
+        r"\b\w+\b",
+        text.lower(),
+    )
+
+def rebuild_bm25_index():
+    """
+    Load all document chunks from Qdrant
+    and rebuild the BM25 index.
+
+    This should be called:
+    - when the application starts
+    - after a document is ingested
+    """
+
+    global _bm25
+    global _bm25_points
+
+    points = get_all_chunks()
+
+    documents = []
+    valid_points = []
+
+    for point in points:
+
+        payload = point.payload or {}
+
+        text = payload.get("text")
+
+        if not text:
+            continue
+
+        documents.append(text)
+        valid_points.append(point)
+
+    if not documents:
+
+        _bm25 = None
+        _bm25_points = []
+
+        return
+
+    tokenized_documents = [
+        tokenize(document)
+        for document in documents
+    ]
+
+    _bm25 = BM25Okapi(
+        tokenized_documents
+    )
+
+    _bm25_points = valid_points
 
 # -----------------------------------------
 # DENSE SEARCH
@@ -59,89 +125,22 @@ def bm25_retrieve(
     top_k: int = DEFAULT_TOP_K,
 ):
     """
-    Retrieve chunks using keyword matching.
-
-    BM25 is useful for exact terms such as:
-
-    - product names
-    - technical terms
-    - IDs
-    - acronyms
-    - short factual queries
+    Retrieve chunks using the cached BM25 index.
     """
 
-    points = get_all_chunks()
+    if _bm25 is None:
+        rebuild_bm25_index()
 
-    if not points:
+    if _bm25 is None:
         return []
 
-
-    # -------------------------------------
-    # Extract chunk text
-    # -------------------------------------
-
-    documents = []
-
-    valid_points = []
-
-    for point in points:
-
-        payload = point.payload or {}
-
-        text = payload.get("text")
-
-        if not text:
-            continue
-
-        documents.append(text)
-
-        valid_points.append(point)
-
-
-    if not documents:
-        return []
-
-
-    # -------------------------------------
-    # Tokenize documents
-    # -------------------------------------
-
-    tokenized_documents = [
-        document.lower().split()
-        for document in documents
-    ]
-
-
-    # -------------------------------------
-    # Build BM25 index
-    # -------------------------------------
-
-    bm25 = BM25Okapi(
-        tokenized_documents
+    tokenized_question = tokenize(
+        question
     )
 
-
-    # -------------------------------------
-    # Tokenize question
-    # -------------------------------------
-
-    tokenized_question = (
-        question.lower().split()
-    )
-
-
-    # -------------------------------------
-    # Calculate BM25 scores
-    # -------------------------------------
-
-    scores = bm25.get_scores(
+    scores = _bm25.get_scores(
         tokenized_question
     )
-
-
-    # -------------------------------------
-    # Sort by BM25 relevance
-    # -------------------------------------
 
     ranked_indexes = sorted(
         range(len(scores)),
@@ -149,25 +148,23 @@ def bm25_retrieve(
         reverse=True,
     )
 
-
-    # -------------------------------------
-    # Return top results
-    # -------------------------------------
-
     results = []
 
     for index in ranked_indexes[:top_k]:
 
-        point = valid_points[index]
+        # Ignore chunks with no keyword match.
+        if scores[index] <= 0:
+            continue
 
-        # Store the BM25 score temporarily.
-        # point.score = float(scores[index])
+        point = _bm25_points[index]
+
         point = point.model_copy(
-            update={"score": float(scores[index])}
+            update={
+                "score": float(scores[index])
+            }
         )
 
         results.append(point)
-
 
     return results
 
